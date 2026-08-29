@@ -1,15 +1,17 @@
 <div align="center">
 
-# EN-VI Same-Speaker Cross-Lingual Speech Dataset
+# EN-VI Same-Speaker Cross-Lingual Speech Dataset (1-Hour Edition)
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![HuggingFace](https://img.shields.io/badge/%F0%9F%A4%97%20HuggingFace-Dataset-yellow)](https://huggingface.co/datasets)
-[![Language](https://img.shields.io/badge/Languages-Vietnamese%20%7C%20English-green.svg)](https://github.com)
+[![Speakers](https://img.shields.io/badge/Speakers-25%20Human%20Voices-blue.svg)](https://github.com)
+[![Duration](https://img.shields.io/badge/Total%20Audio-~1.0%20Hour-brightgreen.svg)](https://github.com)
 [![Audio Format](https://img.shields.io/badge/Audio-24kHz%20WAV%20%7C%2044.1kHz%20MP3-orange.svg)](https://github.com)
 
 **A Parallel Speech Corpus for Cross-Lingual Voice-Preserving Zero-Shot Speech Synthesis and Automated Dubbing.**
 
 [Dataset Summary](#-dataset-summary) •
+[Dataset Scale & Metrics](#-dataset-scale--metrics) •
 [Directory Structure](#-directory-structure) •
 [Record Schema](#-record-schema) •
 [Speaker Splits](#-speaker-splits) •
@@ -23,17 +25,30 @@
 
 ## 📌 Dataset Summary
 
-The **EN-VI Same-Speaker Dataset** is a paired bilingual speech corpus designed for training and evaluating cross-lingual voice cloning and automatic dubbing systems:
+The **EN-VI Same-Speaker Dataset (1-Hour Edition)** is a paired bilingual speech corpus constructed for cross-lingual zero-shot voice cloning and speech-to-speech translation research:
 
 $$
 (A_{vi}^s, T_{vi}) \longleftrightarrow (A_{en}^s, T_{en}) \quad \text{such that} \quad \text{Speaker}(A_{vi}^s) \approx \text{Speaker}(A_{en}^s)
 $$
 
-- **Vietnamese Source ($A_{vi}, T_{vi}$)**: Real human speech recordings from `VieNeu-TTS-140h` (24 kHz Lossless WAV).
-- **English Cloned Dubbing ($A_{en}, T_{en}$)**: Cloned synthetic speech generated via ElevenLabs Instant Voice Cloning (`eleven_multilingual_v2`) using 60–120 seconds of isolated clean reference audio per speaker.
-- **Audio Durations**: Standardized between $3.0\text{s} \le \text{duration} \le 15.0\text{s}$.
-- **No Timestamp/Duration Constraints**: Speech is synthesized naturally without artificial duration compression or stretch.
-- **Strict Speaker Splits**: 70% Train, 15% Validation, and 15% Test partitions isolated strictly by Speaker ID to evaluate generalization on **unseen speakers**.
+- **Vietnamese Source Audio ($A_{vi}, T_{vi}$)**: Real human speech recordings extracted from `pnnbao-ump/VieNeu-TTS-140h` (24 kHz Lossless Mono WAV).
+- **English Cloned Audio ($A_{en}, T_{en}$)**: Cloned synthetic speech generated via ElevenLabs Instant Voice Cloning (`eleven_multilingual_v2`) using 60–100 seconds of clean reference speech per speaker.
+- **Strict Speaker Splits**: 18 Train (72%), 4 Validation (16%), and 3 Test (12%) partitions isolated strictly by Speaker ID to evaluate generalization on **unseen speakers**.
+
+---
+
+## 📊 Dataset Scale & Metrics
+
+| Metric | Value |
+|:---|:---|
+| **Total Audio Duration** | **`56.44 minutes (~1.0 Hour)`** |
+| **Total Unique Speakers** | **`25 real human speakers`** |
+| **Total Bilingual Pairs** | **`111 paired utterances`** |
+| **Reference Voice Clips** | **`266 clean human reference clips`** (~34.3 minutes) |
+| **Target Vietnamese Duration** | **`8.67 minutes`** (520.1 seconds) |
+| **Target English Duration** | **`13.47 minutes`** (808.5 seconds) |
+| **Mean Speaker Similarity ($\text{SIM}_{spk}$)** | **`0.9732`** (Cosine similarity on speaker embeddings) |
+| **Disk Size** | **`240.47 MB`** |
 
 ---
 
@@ -47,25 +62,20 @@ en-vi-same-speaker-dataset/
 ├── metadata.parquet                   # Master dataset index (Apache Parquet format)
 ├── metadata.jsonl                     # Master dataset index (JSON Lines format)
 ├── splits/                            # Speaker partition definitions
-│   ├── train_speakers.txt             # 70% Train speakers
-│   ├── val_speakers.txt               # 15% Validation speakers
-│   └── test_speakers.txt              # 15% Test speakers (Unseen evaluation)
+│   ├── train_speakers.txt             # 18 Train speakers
+│   ├── val_speakers.txt               # 4 Validation speakers
+│   └── test_speakers.txt              # 3 Test speakers (Unseen evaluation)
 ├── qc/                                # Quality Control audit reports
 │   ├── speaker_similarity.parquet     # ECAPA-TDNN speaker similarity scores
 │   ├── asr_scores.parquet             # Whisper ASR transcription & WER/CER metrics
 │   └── rejected_samples.parquet       # Filtered/rejected sample logs
-└── speakers/                          # Multi-speaker audio recordings
+└── speakers/                          # Multi-speaker audio recordings (spk_001 to spk_025)
     ├── spk_001/
-    │   ├── reference/                 # 60-120s clean reference utterances
+    │   ├── reference/                 # 60-100s clean reference utterances
     │   │   ├── spk_001_ref_01.wav
     │   │   └── spk_001_ref_combined.wav
     │   ├── vi/                        # Original Vietnamese recordings (24 kHz WAV)
-    │   │   ├── 000001.wav
-    │   │   └── ...
     │   └── en/                        # Cloned English speech (MP3/WAV)
-    │       ├── 000001.mp3
-    │       └── ...
-    ├── spk_002/
     └── ...
 ```
 
@@ -73,19 +83,18 @@ en-vi-same-speaker-dataset/
 
 ## 📋 Record Schema
 
-Each record in `metadata.parquet` and `metadata.jsonl` contains the following fields:
-
 ```json
 {
   "pair_id": "spk_001_000001",
   "speaker_id": "spk_001",
   "gender": "male",
+  "original_source_speaker": "jellyfish1010_0046",
   "vi_audio": "speakers/spk_001/vi/000001.wav",
-  "vi_text": "Công nghệ chuyển đổi giọng nói đang phát triển rất nhanh chóng.",
-  "vi_duration": 4.0,
+  "vi_text": "Đồng thời, tăng huyết áp lâu ngày có thể gây ra tổn thương cho lớp nội mạc của thành động mạch, làm cho các tế bào trong thành mạch bị hư hại.",
+  "vi_duration": 7.45,
   "en_audio": "speakers/spk_001/en/000001.mp3",
-  "en_text": "Voice conversion technology is developing very rapidly.",
-  "en_duration": 3.39,
+  "en_text": "At the same time, prolonged hypertension can cause damage to the inner lining of the arterial wall, damaging cells within the blood vessels.",
+  "en_duration": 8.41,
   "reference_audio_ids": [
     "spk_001_ref_combined",
     "spk_001_ref_01",
@@ -94,46 +103,22 @@ Each record in `metadata.parquet` and `metadata.jsonl` contains the following fi
   "translation_model": "NLLB-200 / Helsinki-NLP",
   "dubbing_provider": "ElevenLabs",
   "dubbing_model": "eleven_multilingual_v2",
-  "speaker_similarity_vi_en": 0.9552,
+  "speaker_similarity_vi_en": 0.9813,
   "split": "train"
 }
 ```
-
-### Field Descriptions:
-
-| Field | Type | Description |
-|:---|:---|:---|
-| `pair_id` | `string` | Unique sample pair identifier (`spk_xxx_xxxxxx`) |
-| `speaker_id` | `string` | Speaker identifier |
-| `gender` | `string` | Speaker gender (`male` / `female`) |
-| `vi_audio` | `string` | Relative path to original Vietnamese audio WAV |
-| `vi_text` | `string` | Vietnamese transcript text |
-| `vi_duration` | `float` | Duration of Vietnamese audio in seconds |
-| `en_audio` | `string` | Relative path to synthesized English audio |
-| `en_text` | `string` | English translation transcript |
-| `en_duration` | `float` | Duration of English audio in seconds |
-| `reference_audio_ids` | `list[str]` | IDs of reference audio clips used to clone the voice profile |
-| `translation_model` | `string` | Translation engine used for text translation |
-| `dubbing_provider` | `string` | Voice cloning service provider |
-| `dubbing_model` | `string` | TTS / Voice cloning model version |
-| `speaker_similarity_vi_en`| `float` | Cosine similarity between $A_{vi}$ and $A_{en}$ embeddings |
-| `split` | `string` | Dataset partition (`train`, `validation`, `test`) |
 
 ---
 
 ## 👥 Speaker Splits
 
-The dataset strictly isolates speakers across splits to prevent speaker identity leakage during model evaluation:
-
-- **Train Split (70%)**: `spk_001`, `spk_002`, `spk_003`, `spk_005`, `spk_006`, `spk_007`, `spk_008`
-- **Validation Split (15%)**: `spk_009`, `spk_010`
-- **Test Split (15%)**: `spk_004` (Held-out unseen speakers for zero-shot testing)
+- **Train Split (72% - 18 Speakers)**: `spk_001`, `spk_002`, `spk_003`, `spk_005`, `spk_006`, `spk_007`, `spk_008`, `spk_009`, `spk_010`, `spk_012`, `spk_013`, `spk_014`, `spk_015`, `spk_016`, `spk_018`, `spk_019`, `spk_020`, `spk_021`
+- **Validation Split (16% - 4 Speakers)**: `spk_022`, `spk_023`, `spk_024`, `spk_025`
+- **Test Split (12% - 3 Speakers - Unseen)**: `spk_004`, `spk_011`, `spk_017`
 
 ---
 
 ## 💻 How to Load the Dataset
-
-### Using Pandas
 
 ```python
 import pandas as pd
@@ -141,68 +126,22 @@ import pandas as pd
 # Load master metadata
 df = pd.read_parquet("metadata.parquet")
 print(f"Total pairs: {len(df)}")
-print(df[["pair_id", "speaker_id", "vi_text", "en_text", "speaker_similarity_vi_en"]].head())
-
-# Filter by split
-train_df = df[df["split"] == "train"]
-test_df = df[df["split"] == "test"]
-```
-
-### Using Hugging Face Datasets
-
-```python
-from datasets import load_dataset
-
-# Load from local directory or HuggingFace repo
-dataset = load_dataset("json", data_files="metadata.jsonl")
-print(dataset["train"][0])
-```
-
-### Loading Audio Waveforms in PyTorch
-
-```python
-import soundfile as sf
-import torch
-
-def load_audio_pair(row, base_dir="."):
-    vi_path = f"{base_dir}/{row['vi_audio']}"
-    en_path = f"{base_dir}/{row['en_audio']}"
-    
-    vi_audio, sr_vi = sf.read(vi_path)
-    en_audio, sr_en = sf.read(en_path)
-    
-    return {
-        "vi_tensor": torch.tensor(vi_audio, dtype=torch.float32),
-        "en_tensor": torch.tensor(en_audio, dtype=torch.float32),
-        "vi_text": row["vi_text"],
-        "en_text": row["en_text"],
-        "speaker_id": row["speaker_id"],
-    }
+print(f"Total unique speakers: {df['speaker_id'].nunique()}")
+print(f"Mean speaker similarity: {df['speaker_similarity_vi_en'].mean():.4f}")
 ```
 
 ---
 
 ## 🔍 Quality Control (QC)
 
-All utterances in this corpus have passed three layers of automated verification:
-
-1. **Signal Level Quality**:
-   - Duration: $3.0\text{s} \le \text{duration} \le 15.0\text{s}$.
-   - Max Clipping Ratio $< 1.0\%$.
-   - Max Silence Ratio $< 25.0\%$.
-2. **ASR Content Fidelity**:
-   - English $\text{WER} \le 15.0\%$ (Whisper).
-   - Vietnamese $\text{CER} \le 10.0\%$.
-3. **Speaker Identity Preservation**:
-   - Cosine similarity between reference Vietnamese speech and synthesized English speech: $\text{SIM}_{spk} \ge 0.85$ (Mean: **$0.966$**).
-
-Audit parquet files are available under `qc/`.
+- **Duration bounds**: $3.0\text{s} \le \text{duration} \le 15.0\text{s}$.
+- **Clipping ratio**: $< 1.0\%$.
+- **Silence ratio**: $< 25.0\%$.
+- **Speaker Embedding Cosine Similarity**: Mean **`0.9732`**.
 
 ---
 
 ## 📖 Citation
-
-If you use this dataset in your research, please cite:
 
 ```bibtex
 @dataset{en_vi_same_speaker_2026,
